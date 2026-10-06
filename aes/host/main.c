@@ -199,12 +199,20 @@ int main(void)
 	printf("Decode buffer from TA\n");
 	cipher_buffer(&ctx, ciph, temp, AES_TEST_BUFFER_SIZE);
 
-	/* Check decoded is the clear content */
-	if (memcmp(clear, temp, AES_TEST_BUFFER_SIZE))
-		printf("Clear text and decoded text differ => ERROR\n");
-	else
-		printf("Clear text and decoded text match\n");
-
+	/* A no-op cipher and a failed round trip must fail the test. */
+	if (!memcmp(clear, ciph, AES_TEST_BUFFER_SIZE)) {
+		fprintf(stderr, "Cipher text equals clear text => ERROR\n");
+		terminate_tee_session(&ctx);
+		return 1;
+	}
+	if (memcmp(clear, temp, AES_TEST_BUFFER_SIZE)) {
+		fprintf(stderr, "Clear text and decoded text differ => ERROR\n");
+		terminate_tee_session(&ctx);
+		return 1;
+	}
+	printf("Clear text and decoded text match\n");
+	printf("TA_AES_4K_OK: bytes=%d encrypt=ok decrypt=ok compare=ok\n",
+	       AES_TEST_BUFFER_SIZE);
 	terminate_tee_session(&ctx);
 	return 0;
 }
